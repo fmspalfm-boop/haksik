@@ -44,9 +44,13 @@ h1{font-size:clamp(42px,13vw,52px);font-weight:900;line-height:1.08;letter-spaci
 .seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
 .badge{font-size:13px;font-weight:700;padding:5px 12px;border-radius:10px;background:var(--ink);color:var(--paper)}
 .hours{font-size:13px;color:var(--mute);font-weight:700}
-.main{font-size:34px;font-weight:900;letter-spacing:-1px;line-height:1.2;margin-top:12px;word-break:keep-all}
-.rest{font-size:16px;color:var(--soft);margin-top:6px;line-height:1.55;word-break:keep-all}
-.note{font-size:12px;color:var(--kimchi);font-weight:700;margin-top:10px}
+.hours em{font-style:normal;color:var(--kimchi)}
+.mainwrap{margin-top:14px}
+.main{display:inline-block;font-size:34px;font-weight:900;letter-spacing:-1px;line-height:1.25;word-break:keep-all;background:var(--yolk);color:#3D2E12;box-shadow:inset 0 0 0 3px #E0A200;border-radius:14px;padding:3px 16px 8px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.chip{display:inline-flex;align-items:center;gap:7px;font-size:15px;font-weight:700;padding:8px 13px 8px 11px;border-radius:99px;background:var(--chip)}
+.chip::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--c,#999);flex:none}
+.chip.line{background:transparent;box-shadow:inset 0 0 0 2px var(--ink)}
 .msg{font-size:25px;font-weight:900;letter-spacing:-.8px;line-height:1.3;margin-top:4px;word-break:keep-all}
 .sub{font-size:14px;color:var(--mute);margin-top:6px}
 .btn{font:inherit;margin-top:16px;width:100%;background:var(--ink);color:var(--paper);border:0;border-radius:14px;padding:14px 18px;font-size:16px;font-weight:700;cursor:pointer}
@@ -293,16 +297,16 @@ function render(){
     const m=arrange(list);
     $("tray").innerHTML=drawTray(list);
     $("tray").setAttribute("aria-label",label(view)+" 식판: "+list.join(", "));
-    const others=list.filter(x=>x!==m.main);
     const hours=(DATA.hours||{})[meal]||"";
     const seg=(hasL&&hasD)
       ? `<div class="seg"><button data-meal="lunch" aria-pressed="${meal==="lunch"}">중식</button><button data-meal="dinner" aria-pressed="${meal==="dinner"}">석식</button></div>`
       : `<span class="badge">${meal==="lunch"?"중식":"석식"}</span>`;
+    const note=DATA.note&&meal==="lunch"&&hours?` <em>(${esc(DATA.note.replace("중에는","중"))})</em>`:"";
+    const rows=[["밥",m.rice,"#B9C2C8"],["국",m.soup,"#E0A24A"],...m.sides.map(x=>["반찬",x,"#2F9E5B"]),["김치",m.kimchi,"#E8452C"]].filter(r=>r[1]&&r[1]!==m.main);
     $("content").innerHTML=
-      `<div class="meal">${seg}<span class="hours">${esc(hours)}</span></div>`+
-      `<div class="main">${esc(m.main)}</div>`+
-      `<div class="rest">${esc(others.join(", "))}</div>`+
-      (DATA.note&&meal==="lunch"?`<div class="note">${esc(DATA.note)}</div>`:"");
+      `<div class="meal">${seg}<span class="hours">${esc(hours)}${note}</span></div>`+
+      `<div class="mainwrap"><span class="main">${esc(m.main)}</span></div>`+
+      `<div class="chips">`+rows.map(r=>`<span class="chip${r[0]==="밥"||r[0]==="국"?" line":""}" style="--c:${r[2]}">${esc(r[1])}</span>`).join("")+`</div>`;
   }else{
     $("tray").innerHTML=TRAY_BASE+CHARACTER;
     $("tray").setAttribute("aria-label","빈 식판 위에서 울고 있는 밥공기 캐릭터");
