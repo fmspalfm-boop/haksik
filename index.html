@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>오늘의 학식은!?</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@500;700;900&display=swap">
+<style>
+:root{
+  --yolk:#FFD23F; --line:#1B1A17; --kimchi:#E8452C;
+  --bg:#EFEDE7; --paper:#FFFFFF; --ink:#1B1A17; --soft:#3D3A34; --mute:#6F6B62; --chip:#F3F1EC; --dash:#CFCBC2;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){--bg:#141310;--paper:#201F1B;--ink:#F4F1E8;--soft:#D8D3C7;--mute:#A39E92;--chip:#2E2C27;--dash:#4A473F}
+}
+:root[data-theme="dark"]{--bg:#141310;--paper:#201F1B;--ink:#F4F1E8;--soft:#D8D3C7;--mute:#A39E92;--chip:#2E2C27;--dash:#4A473F}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
+body{min-height:100%;background:var(--bg);color:var(--ink);font-family:"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;font-weight:500;-webkit-font-smoothing:antialiased}
+.app{max-width:440px;margin:0 auto;min-height:100vh;background:var(--paper);display:flex;flex-direction:column}
+@media (min-width:480px){body{padding:28px 0}.app{min-height:0;border-radius:36px;overflow:hidden;border:6px solid var(--line)}}
+.head{background:var(--yolk);color:var(--line);padding:34px 24px 72px}
+.date{font-size:15px;font-weight:700}
+h1{font-size:clamp(42px,13vw,52px);font-weight:900;line-height:1.08;letter-spacing:-2px;margin-top:6px}
+.place{display:inline-block;margin-top:14px;font-size:13px;font-weight:700;padding:6px 13px;border-radius:99px;background:var(--line);color:var(--yolk)}
+.tray{display:block;width:calc(100% - 32px);height:auto;margin:-54px 16px 0}
+.body{padding:16px 24px 0;flex:1;display:flex;flex-direction:column}
+.meal{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.seg{display:inline-flex;border:2px solid var(--ink);border-radius:10px;overflow:hidden}
+.seg button{font:inherit;font-size:13px;font-weight:700;padding:5px 16px;border:0;background:transparent;color:var(--ink);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.badge{font-size:13px;font-weight:700;padding:5px 12px;border-radius:10px;background:var(--ink);color:var(--paper)}
+.hours{font-size:13px;color:var(--mute);font-weight:700}
+.main{font-size:34px;font-weight:900;letter-spacing:-1px;line-height:1.2;margin-top:12px;word-break:keep-all}
+.rest{font-size:16px;color:var(--soft);margin-top:6px;line-height:1.55;word-break:keep-all}
+.note{font-size:12px;color:var(--kimchi);font-weight:700;margin-top:10px}
+.msg{font-size:25px;font-weight:900;letter-spacing:-.8px;line-height:1.3;margin-top:4px;word-break:keep-all}
+.sub{font-size:14px;color:var(--mute);margin-top:6px}
+.btn{font:inherit;margin-top:16px;width:100%;background:var(--ink);color:var(--paper);border:0;border-radius:14px;padding:14px 18px;font-size:16px;font-weight:700;cursor:pointer}
+.wk{font-size:12px;font-weight:700;color:var(--mute);margin:28px 0 6px;min-height:18px}
+.week{display:flex;gap:8px;padding-bottom:10px}
+.week button{font:inherit;flex:1;text-align:center;border-radius:14px;padding:8px 0 9px;background:var(--chip);color:var(--ink);border:2px solid transparent;cursor:pointer;position:relative}
+.week b{display:block;font-size:19px;font-weight:900;line-height:1.2}
+.week i{font-style:normal;font-size:12px;font-weight:700;color:var(--mute)}
+.week button[aria-pressed="true"]{background:var(--kimchi);color:#fff}
+.week button[aria-pressed="true"] i{color:#fff}
+.week button.off{background:transparent;border:2px dashed var(--dash);cursor:default}
+.week button.off b{color:var(--mute);opacity:.6}
+.week button.off[aria-pressed="true"]{background:transparent;color:var(--ink);border-color:var(--kimchi)}
+.week button.off[aria-pressed="true"] i{color:var(--mute)}
+.week button.today::after{content:"";position:absolute;left:50%;bottom:3px;width:5px;height:5px;margin-left:-2.5px;border-radius:50%;background:currentColor}
+.spacer{flex:1}
+.src{font-size:11px;color:var(--mute);text-align:center;padding:6px 0 20px}
+button:focus-visible{outline:3px solid #3B6FD9;outline-offset:2px}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="head">
+    <div class="date" id="date"></div>
+    <h1 id="title"></h1>
+    <span class="place">석관동 식당</span>
+  </header>
+  <svg class="tray" id="tray" viewBox="0 0 342 256" role="img"></svg>
+  <main class="body">
+    <div id="content"></div>
+    <div class="spacer"></div>
+    <div class="wk" id="wk"></div>
+    <div class="week" id="week"></div>
+    <div class="src">출처: 한국예술종합학교 누리 학교식단</div>
+  </main>
+</div>
+
+<script>
+/* ───────── 식단 데이터 ─────────
+   같은 폴더에 menu.json 이 있으면 그 파일을 우선 읽고, 없으면 아래 기본값을 씁니다.
+   매주 이 부분(또는 menu.json)만 바꾸면 화면은 자동으로 바뀝니다. */
+const HOURS = { lunch: "11:30 ~ 14:00", dinner: "" };
+const NOTE = "방학 중에는 13:00까지";
+/* 학교 누리 식단 응답(getWeekMenuView2.do, board_div=skmenu)을 그대로 넣은 기본값 */
+const RAW = {"data":{"titl":"2026/09/28 ~ 2026/10/02","cont":"완두콩밥<br/>북어표고매운국<br/>만두탕수<br/>무말랭이무침<br/>감자조림<br/>포기김치쌀밥<br/>돈등뼈우거지탕<br/>모둠소시지볶음<br/>오이고추무침<br/>새송이들깨무침<br/>깍두기짜장밥<br/>유부장국<br/>해물볶음우동<br/>짜사이채무침<br/>*<br/>열무김치쌀밥<br/>시래기된장국<br/>삼겹살고추장볶음<br/>두부조림<br/>양배추숙쌈<br/>포기김치수수밥<br/>순두부찌개<br/>갈치구이<br/>잡채<br/>쑥갓오이무침<br/>깍두기콩나물밥<br/>미역국<br/>메밀전병<br/>도라지무생채<br/>요구르트<br/>포기김치귀리밥<br/>건새우아욱국<br/>버섯불고기<br/>감자호박채전<br/>콩나물무침<br/>포기김치쌀밥<br/>김치두부국<br/>닭강정<br/>모둠채소피클<br/>참깨냉파스타<br/>총각김치서리태밥<br/>게살누룽지탕<br/>가지돈육볶음<br/>도토리묵무침<br/>연근조림<br/>깍두기쌀밥<br/>감자계란국<br/>깐쇼새우<br/>어묵조림<br/>다시마채무침<br/>포기김치&nbsp;&nbsp;"}};
+
+/* 학교 응답은 한 끼가 6줄이고, 끼니 사이가 붙어서 옵니다(예: "포기김치쌀밥").
+   붙은 줄을 김치/밥 이름 기준으로 다시 나눠 날짜별 중식·석식으로 정리합니다. */
+function splitGlued(t){
+  if(!t) return ["",""];
+  let m=t.match(/^(.*?(?:김치|깍두기|석박지|겉절이|피클|단무지))(.+)$/);
+  if(m) return [m[1],m[2]];
+  m=t.match(/^(.+?)((?:흑미|현미|잡곡|보리|완두콩|수수|귀리|서리태|콩나물|짜장|카레|기장|차조|곤드레|옥수수|볶음|비빔|덮|쌀|찰)밥)$/) || t.match(/^(.+?)(.밥)$/);
+  return m ? [m[1],m[2]] : [t,""];
+}
+function fromNuri(j){
+  const d=(j&&j.data)||{}; const m=String(d.titl||"").match(/(\d{4})\/(\d{2})\/(\d{2})/);
+  if(!m||!d.cont) return null;
+  const toks=String(d.cont).replace(/&nbsp;/g," ").split(/<br\s*\/?>/i).map(t=>t.trim());
+  const flat=[]; toks.forEach((t,i)=>{ if(i>0&&i%5===0&&i<toks.length-1) flat.push(...splitGlued(t)); else flat.push(t); });
+  const days={}; let day=m[1]+"-"+m[2]+"-"+m[3];
+  for(let i=0;i<flat.length;i+=12){
+    days[day]={lunch:flat.slice(i,i+6),dinner:flat.slice(i+6,i+12)};
+    const x=new Date(day+"T00:00:00Z"); x.setUTCDate(x.getUTCDate()+1); day=x.toISOString().slice(0,10);
+  }
+  return {hours:HOURS,note:NOTE,days};
+}
+let DATA = fromNuri(RAW) || {hours:HOURS,note:NOTE,days:{}};
+
+/* ───────── 날짜 도구 (한국 시간 기준) ───────── */
+const DOW = ["일","월","화","수","목","금","토"];
+const qs = new URLSearchParams(location.search);
+const TODAY = /^\d{4}-\d{2}-\d{2}$/.test(qs.get("d")||"") ? qs.get("d")
+  : new Intl.DateTimeFormat("sv-SE",{timeZone:"Asia/Seoul"}).format(new Date());
+const D = s => new Date(s+"T00:00:00Z");
+const add = (s,n) => { const d=D(s); d.setUTCDate(d.getUTCDate()+n); return d.toISOString().slice(0,10); };
+const dow = s => D(s).getUTCDay();
+const monday = s => add(s, -((dow(s)+6)%7));
+const label = s => `${D(s).getUTCMonth()+1}월 ${D(s).getUTCDate()}일 ${DOW[dow(s)]}요일`;
+const items = (s,meal) => ((DATA.days[s]||{})[meal]||[]).map(x=>String(x).trim()).filter(x=>x && !/^[*\-·.]+$/.test(x));
+const hasMenu = s => items(s,"lunch").length>0 || items(s,"dinner").length>0;
+const nextMenu = s => { for(let i=1;i<=14;i++){ const d=add(s,i); if(hasMenu(d)) return d; } return null; };
+const lastDataDay = () => Object.keys(DATA.days).filter(hasMenu).sort().pop() || null;
+
+/* ───────── 음식 그림 (메뉴 이름의 키워드로 자동 선택) ───────── */
+const P5=[[-20,-10,-18],[22,-12,14],[-12,14,10],[24,13,-20],[2,2,-6]];
+const f=n=>Math.round(n*10)/10;
+function pieces(cx,cy,s,fill,stroke,alt){
+  return P5.map(([x,y,r],i)=>`<ellipse cx="${f(cx+x*s)}" cy="${f(cy+y*s)}" rx="${f(21*s)}" ry="${f(12*s)}" transform="rotate(${r} ${f(cx+x*s)} ${f(cy+y*s)})" fill="${i%2&&alt?alt:fill}" stroke="${stroke}" stroke-width="2"/>`).join("");
+}
+function specks(cx,cy,s,color){
+  return `<g stroke="${color}" stroke-width="${f(4.5*s)}" stroke-linecap="round">`+
+    [[-30,4,-20,9],[8,-22,18,-26],[12,24,22,27],[-8,-8,-1,-2]].map(([a,b,c,d])=>`<path d="M${f(cx+a*s)} ${f(cy+b*s)}L${f(cx+c*s)} ${f(cy+d*s)}"/>`).join("")+`</g>`;
+}
+function cubes(cx,cy,s,fill,stroke){
+  return [[-18,-12,-8],[10,-14,10],[-4,10,4],[22,10,-12],[-28,12,14]].map(([x,y,r])=>
+    `<rect x="${f(cx+x*s-10*s)}" y="${f(cy+y*s-10*s)}" width="${f(20*s)}" height="${f(20*s)}" rx="${f(5*s)}" transform="rotate(${r} ${f(cx+x*s)} ${f(cy+y*s)})" fill="${fill}" stroke="${stroke}" stroke-width="2"/>`).join("");
+}
+function strips(cx,cy,s,colors){
+  const L=[[-30,-14,-10,-18],[-6,-20,16,-12],[18,-18,32,-6],[-32,0,-12,6],[-10,-4,12,2],[14,2,32,8],[-26,16,-6,20],[-2,14,18,22],[20,18,30,24],[-18,-8,-4,-14],[4,10,-10,12]];
+  return `<g stroke-width="${f(5*s)}" stroke-linecap="round">`+L.map(([a,b,c,d],i)=>
+    `<path d="M${f(cx+a*s)} ${f(cy+b*s)}L${f(cx+c*s)} ${f(cy+d*s)}" stroke="${colors[i%colors.length]}"/>`).join("")+`</g>`;
+}
+function noodles(cx,cy,s,color,shade){
+  let o=`<g fill="none" stroke-linecap="round" stroke-width="${f(5.5*s)}">`;
+  [-18,-8,2,12,22].forEach((k,i)=>{ const x=cx-32*s+(i%2?4*s:0), y=cy+k*s;
+    o+=`<path d="M${f(x)} ${f(y)}q${f(8*s)} ${f(-11*s)} ${f(16*s)} 0t${f(16*s)} 0t${f(16*s)} 0t${f(16*s)} 0" stroke="${i%2?shade:color}"/>`; });
+  return o+`</g>`;
+}
+function slabs(cx,cy,s){
+  return [[-10,-12,-8],[10,12,6]].map(([x,y,r])=>
+    `<g transform="rotate(${r} ${f(cx+x*s)} ${f(cy+y*s)})"><rect x="${f(cx+x*s-30*s)}" y="${f(cy+y*s-10*s)}" width="${f(60*s)}" height="${f(20*s)}" rx="${f(8*s)}" fill="#B9C3CC" stroke="#69747D" stroke-width="2"/>`+
+    [-16,-4,8,20].map(k=>`<path d="M${f(cx+x*s+k*s)} ${f(cy+y*s-7*s)}l${f(-5*s)} ${f(14*s)}" stroke="#7A5B3A" stroke-width="${f(2.5*s)}" stroke-linecap="round"/>`).join("")+`</g>`).join("");
+}
+function rounds(cx,cy,s,fill,stroke,holes){
+  return [[-22,-8],[10,-12],[-6,13],[26,10]].map(([x,y])=>{
+    const X=cx+x*s,Y=cy+y*s; let o=`<circle cx="${f(X)}" cy="${f(Y)}" r="${f(15*s)}" fill="${fill}" stroke="${stroke}" stroke-width="2"/>`;
+    if(holes) o+=[[0,-6],[6,2],[-6,2],[0,1]].map(([a,b])=>`<circle cx="${f(X+a*s)}" cy="${f(Y+b*s)}" r="${f(2.2*s)}" fill="${stroke}"/>`).join("");
+    else o+=`<circle cx="${f(X-4*s)}" cy="${f(Y-4*s)}" r="${f(3*s)}" fill="#fff" opacity=".45"/>`;
+    return o; }).join("");
+}
+function nuggets(cx,cy,s){
+  let o=[[-22,-8],[8,-13],[-6,12],[26,9],[-30,14]].map(([x,y])=>`<circle cx="${f(cx+x*s)}" cy="${f(cy+y*s)}" r="${f(13*s)}" fill="#EDB04A" stroke="#B5761A" stroke-width="2"/>`).join("");
+  o+=`<path d="M${f(cx-30*s)} ${f(cy-2*s)}q${f(14*s)} ${f(-14*s)} ${f(28*s)} ${f(-2*s)}t${f(30*s)} ${f(8*s)}" fill="none" stroke="#D9573A" stroke-width="${f(7*s)}" stroke-linecap="round" opacity=".85"/>`;
+  return o+specks(cx,cy,s*.8,"#2F9E5B");
+}
+function mound(cx,cy,dot,sauce){
+  let o=`<g fill="#fff" stroke="#B9C2C8" stroke-width="2">`+[[-30,14,25],[30,14,25],[-17,-15,23],[17,-15,23],[0,8,33]].map(([x,y,r])=>`<circle cx="${cx+x}" cy="${cy+y}" r="${r}"/>`).join("")+`</g>`;
+  const pts=[[-20,-16],[14,-22],[-6,0],[20,10],[-32,14],[2,24],[32,-4],[-14,28],[-2,-26],[26,26]];
+  if(sauce) o+=`<path d="M${cx-6} ${cy-30}q34 -6 44 22q6 22 -14 34q-26 10 -40 -8q-12 -22 10 -48z" fill="${sauce}" stroke="#00000030" stroke-width="2"/>`;
+  o+=pts.map(([x,y],i)=> dot && !sauce
+      ? `<circle cx="${cx+x}" cy="${cy+y}" r="3.2" fill="${dot}"/>`
+      : (sauce&&x>-8 ? "" : `<path d="M${cx+x} ${cy+y}l6 ${i%2?2:-2}" stroke="#C9D1D6" stroke-width="2.5" stroke-linecap="round"/>`)).join("");
+  return o;
+}
+function soup(cx,cy,color,stroke,white){
+  let o=`<circle cx="${cx}" cy="${cy}" r="50" fill="${color}" stroke="${stroke}" stroke-width="2.5"/>`;
+  if(white) o+=`<g fill="#FFFDF4" stroke="#D8C9A8" stroke-width="2"><rect x="${cx-30}" y="${cy-26}" width="21" height="21" rx="4"/><rect x="${cx+6}" y="${cy+8}" width="21" height="21" rx="4" transform="rotate(12 ${cx+16} ${cy+18})"/><rect x="${cx+10}" y="${cy-30}" width="19" height="19" rx="4" transform="rotate(-10 ${cx+19} ${cy-20})"/></g>`;
+  else o+=`<g fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".55"><path d="M${cx-26} ${cy-12}q10 -10 20 0"/><path d="M${cx+4} ${cy+16}q10 -10 20 0"/></g>`;
+  o+=`<g fill="#8FCB7A" stroke="#2F9E5B" stroke-width="2"><path d="M${cx-34} ${cy+16}a13 13 0 0 1 26 0z"/><path d="M${cx-10} ${cy+38}a12 12 0 0 1 24 0z"/></g>`;
+  return o+`<g stroke="#E8452C" stroke-width="4" stroke-linecap="round"><path d="M${cx-2} ${cy-4}l8 4M${cx+30} ${cy-2}l6 -5"/></g>`;
+}
+function kimchi(cx,cy,name){
+  if(/깍두기|석박지|총각/.test(name))
+    return [[-2,-36,-8],[4,-10,10],[-4,16,4],[3,40,-12]].map(([x,y,r])=>`<rect x="${cx+x-11}" y="${cy+y-11}" width="22" height="22" rx="5" transform="rotate(${r} ${cx+x} ${cy+y})" fill="#EE5A3A" stroke="#B02E18" stroke-width="2"/>`).join("");
+  if(/열무|갓|파김치|부추|오이/.test(name)){
+    let o=`<g stroke-width="5" stroke-linecap="round">`;
+    [[-14,-40,12,-34,"#2F9E5B"],[-12,-26,14,-28,"#E8452C"],[-14,-14,10,-8,"#3FB56B"],[-10,2,14,-2,"#2F9E5B"],[-14,12,12,16,"#E8452C"],[-12,28,14,26,"#3FB56B"],[-12,40,10,42,"#2F9E5B"]]
+      .forEach(([a,b,c,d,col])=>o+=`<path d="M${cx+a} ${cy+b}L${cx+c} ${cy+d}" stroke="${col}"/>`);
+    return o+`</g>`;
+  }
+  return [[0,-34,-10,"#E8452C"],[2,-4,12,"#F0633F"],[-1,28,5,"#E8452C"]].map(([x,y,r,c])=>
+    `<g transform="rotate(${r} ${cx+x} ${cy+y})"><rect x="${cx+x-17}" y="${cy+y-12}" width="34" height="24" rx="7" fill="${c}" stroke="#B02E18" stroke-width="2"/><path d="M${cx+x-8} ${cy+y}h13" stroke="#FFE7C2" stroke-width="4" stroke-linecap="round"/></g>`).join("");
+}
+function dish(name,cx,cy,s){
+  const n=name;
+  if(/탕수|강정|튀김|까스|커틀릿|너겟|치킨|고로케|돈가스/.test(n)) return nuggets(cx,cy,s);
+  if(/잡채|당면/.test(n)) return noodles(cx,cy,s,"#B98A5A","#9C6E42")+specks(cx,cy,s,"#E8833A");
+  if(/짜장면|자장면/.test(n)) return noodles(cx,cy,s,"#5A3B26","#3E2817");
+  if(/우동|국수|면|스파게티|파스타|쫄면/.test(n)) return noodles(cx,cy,s,"#F2D9A0","#DDBB73")+specks(cx,cy,s,"#E8452C");
+  if(/새우/.test(n)) return pieces(cx,cy,s,"#F08A4B","#B85A22","#F6A96F")+specks(cx,cy,s,"#2F9E5B");
+  if(/소시지|햄|비엔나/.test(n)) return pieces(cx,cy,s,"#D9654A","#9C3A22","#E88A6E")+specks(cx,cy,s,"#2F9E5B");
+  if(/다시마|미역줄기|파래/.test(n)) return strips(cx,cy,s,["#3E6B4A","#2B4F36","#57845F"]);
+  if(/갈치|고등어|삼치|생선|조기|가자미|임연수|꽁치|코다리|동태/.test(n)) return slabs(cx,cy,s);
+  if(/전$|전병|부침|동그랑땡|계란말이|계란|달걀|오믈렛/.test(n)) return rounds(cx,cy,s,"#FFD23F","#D99A00");
+  if(/묵/.test(n)) return cubes(cx,cy,s,"#9A6A48","#6B4428")+specks(cx,cy,s*.8,"#2F9E5B");
+  if(/연근/.test(n)) return rounds(cx,cy,s,"#E9D3B0","#9C7B4F",true);
+  if(/두부/.test(n)) return cubes(cx,cy,s,"#FFFDF4","#D8C9A8");
+  if(/감자|고구마|단호박|호박/.test(n)) return cubes(cx,cy,s,"#EFC050","#B98A1E");
+  if(/콩나물|숙주/.test(n)) return strips(cx,cy,s,["#F6E7A6","#E9D27A","#F6E7A6","#E8452C"]);
+  if(/무말랭이|무생채|단무지|당근/.test(n)) return strips(cx,cy,s,["#EE8A3C","#D96B24","#F3A560"]);
+  if(/나물|무침|샐러드|쌈|오이|시금치|쑥갓|상추|브로콜리|겉절이|피클/.test(n)) return strips(cx,cy,s,["#2F9E5B","#57BD7A","#2F9E5B","#E8452C"]);
+  if(/가지/.test(n)) return pieces(cx,cy,s,"#7B4C9A","#4E2C68","#B5633F")+specks(cx,cy,s,"#2F9E5B");
+  if(/불고기|갈비|장조림|함박|스테이크|버섯/.test(n)) return pieces(cx,cy,s,"#96552F","#63351A","#C9A26B")+specks(cx,cy,s,"#2F9E5B");
+  if(/제육|두루치기|삼겹|고추장|닭|돈육|돼지|오징어|낙지|쭈꾸미|볶음|찜|구이/.test(n)) return pieces(cx,cy,s,"#C8432B","#8E2A18","#D9573A")+specks(cx,cy,s,"#2F9E5B");
+  if(/조림/.test(n)) return cubes(cx,cy,s,"#9A6A48","#6B4428");
+  return pieces(cx,cy,s,"#D2AE78","#9C7B4F","#E3C79A");
+}
+function riceDish(name,cx,cy){
+  if(/짜장|자장/.test(name)) return mound(cx,cy,null,"#4A2F1E");
+  if(/카레|커리/.test(name)) return mound(cx,cy,null,"#E9B02E");
+  if(/완두|콩나물|녹두/.test(name)) return mound(cx,cy,"#57BD7A");
+  if(/수수|팥|기장/.test(name)) return mound(cx,cy,"#A5553F");
+  if(/서리태|흑미|검정|검은콩/.test(name)) return mound(cx,cy,"#2B2630");
+  if(/귀리|보리|현미|잡곡|조밥|옥수수/.test(name)) return mound(cx,cy,"#C9A66B");
+  if(/밥|죽/.test(name)) return mound(cx,cy,null);
+  return dish(name,cx,cy,1.1);
+}
+function soupDish(name,cx,cy){
+  const white=/두부|유부|게살|북어|누룽지|계란|어묵|만두|떡/.test(name);
+  if(/순두부|김치|육개장|매운|짬뽕|부대|고추장|해장/.test(name)) return soup(cx,cy,"#E0603A","#A53A1C",white);
+  if(/된장|아욱|시래기|청국장|우거지|근대|배추/.test(name)) return soup(cx,cy,"#C08B45","#8F5E20",white);
+  if(/미역|매생이|시금치/.test(name)) return soup(cx,cy,"#7C9A6A","#4E6B40",white);
+  return soup(cx,cy,"#EAD9A6","#B79E5C",white);
+}
+const TRAY_BASE =
+  `<rect x="2" y="2" width="338" height="252" rx="26" fill="#DCE2E6" stroke="#1B1A17" stroke-width="4"/>`+
+  `<g fill="#C6CFD5" stroke="#AEB9C0" stroke-width="2"><rect x="16" y="16" width="84" height="88" rx="14"/><rect x="110" y="16" width="122" height="88" rx="14"/><rect x="242" y="16" width="84" height="88" rx="14"/><rect x="16" y="114" width="128" height="126" rx="16"/><circle cx="208" cy="177" r="60"/><rect x="278" y="114" width="48" height="126" rx="14"/></g>`;
+const CHARACTER =
+  `<ellipse cx="171" cy="226" rx="74" ry="9" fill="#AEB9C0"/>`+
+  `<g fill="#fff" stroke="#1B1A17" stroke-width="4"><circle cx="140" cy="104" r="26"/><circle cx="202" cy="104" r="26"/><circle cx="171" cy="86" r="32"/></g>`+
+  `<path d="M96 118h150c0 62-30 104-75 104s-75-42-75-104z" fill="#fff" stroke="#1B1A17" stroke-width="4" stroke-linejoin="round"/>`+
+  `<path d="M101 140h140" stroke="#3B6FD9" stroke-width="7"/>`+
+  `<rect x="150" y="218" width="42" height="10" rx="4" fill="#fff" stroke="#1B1A17" stroke-width="4"/>`+
+  `<g fill="none" stroke="#1B1A17" stroke-width="4.5" stroke-linecap="round"><path d="M138 170q9-9 18 0"/><path d="M186 170q9-9 18 0"/><path d="M160 198q11-10 22 0"/></g>`+
+  `<ellipse cx="128" cy="184" rx="9" ry="5" fill="#FFB3A6"/><ellipse cx="214" cy="184" rx="9" ry="5" fill="#FFB3A6"/>`+
+  `<path d="M206 178c7 10 9 15 9 19a9 9 0 0 1-18 0c0-4 2-9 9-19z" fill="#6FB6FF" stroke="#1B1A17" stroke-width="3" stroke-linejoin="round"/>`;
+
+/* 메뉴 줄 순서: 밥, 국, 주메뉴, 반찬…, 김치 */
+function arrange(list){
+  const a=[...list]; const out={rice:null,soup:null,main:null,sides:[],kimchi:null};
+  const k=a.findIndex((x,i)=>i>1 && /김치|깍두기|석박지|겉절이/.test(x));
+  if(k>-1) out.kimchi=a.splice(k,1)[0];
+  out.rice=a.shift()||null; out.soup=a.shift()||null; out.main=a.shift()||null; out.sides=a;
+  if(!out.main){ out.main=out.rice; }
+  return out;
+}
+function drawTray(list){
+  const m=arrange(list); let o=TRAY_BASE;
+  if(m.sides[0]) o+=dish(m.sides[0],58,60,.78);
+  if(m.main && m.main!==m.rice) o+=dish(m.main,171,60,1.08);
+  if(m.sides[1]) o+=dish(m.sides[1],284,60,.78);
+  if(m.rice) o+=riceDish(m.rice,80,177);
+  if(m.soup) o+=soupDish(m.soup,208,177);
+  if(m.kimchi) o+=kimchi(302,177,m.kimchi);
+  return o;
+}
+
+/* ───────── 화면 그리기 ───────── */
+let view=TODAY, meal="lunch";
+const $=id=>document.getElementById(id);
+const esc=s=>s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+function render(){
+  const isToday=view===TODAY;
+  $("date").textContent=label(view);
+  $("title").innerHTML=(isToday?"오늘의":DOW[dow(view)]+"요일")+"<br>학식은!?";
+  const hasL=items(view,"lunch").length>0, hasD=items(view,"dinner").length>0;
+  if(meal==="dinner"&&!hasD) meal="lunch";
+  if(meal==="lunch"&&!hasL&&hasD) meal="dinner";
+  const list=items(view,meal);
+
+  if(list.length){
+    const m=arrange(list);
+    $("tray").innerHTML=drawTray(list);
+    $("tray").setAttribute("aria-label",label(view)+" 식판: "+list.join(", "));
+    const others=list.filter(x=>x!==m.main);
+    const hours=(DATA.hours||{})[meal]||"";
+    const seg=(hasL&&hasD)
+      ? `<div class="seg"><button data-meal="lunch" aria-pressed="${meal==="lunch"}">중식</button><button data-meal="dinner" aria-pressed="${meal==="dinner"}">석식</button></div>`
+      : `<span class="badge">${meal==="lunch"?"중식":"석식"}</span>`;
+    $("content").innerHTML=
+      `<div class="meal">${seg}<span class="hours">${esc(hours)}</span></div>`+
+      `<div class="main">${esc(m.main)}</div>`+
+      `<div class="rest">${esc(others.join(", "))}</div>`+
+      (DATA.note&&meal==="lunch"?`<div class="note">${esc(DATA.note)}</div>`:"");
+  }else{
+    $("tray").innerHTML=TRAY_BASE+CHARACTER;
+    $("tray").setAttribute("aria-label","빈 식판 위에서 울고 있는 밥공기 캐릭터");
+    const weekend=dow(view)===0||dow(view)===6;
+    const last=lastDataDay();
+    const stale=!weekend && (!last || view>last) && ![0,1,2,3,4].some(i=>hasMenu(add(monday(view),i)));
+    const next=nextMenu(view);
+    const when=isToday?"오늘은":"이날은";
+    $("content").innerHTML=
+      (stale ? `<div class="msg">아직 식단이<br>올라오지 않았어요</div><div class="sub">학교에서 이번 주 식단을 올리면 여기에 나타나요.</div>`
+             : `<div class="msg">${when} 쉬는 날이라<br>메뉴가 없어요 ㅠ</div>`+
+               `<div class="sub">${next?`다음 학식은 ${label(next)}이에요.`:"다음 식단은 아직 올라오지 않았어요."}</div>`)+
+      (next?`<button class="btn" data-go="${next}">${label(next)} 식단 보기</button>`
+           :(!isToday?`<button class="btn" data-go="${TODAY}">오늘로 돌아가기</button>`:""));
+  }
+
+  /* 주간 스트립 */
+  let wkStart=monday(view), wkLabel="";
+  if(dow(view)===0||dow(view)===6){
+    const n=nextMenu(view), last=lastDataDay();
+    if(n){ wkStart=monday(n); wkLabel="다음 주"; }
+    else if(last){ wkStart=monday(last); wkLabel="최근 식단"; }
+    else wkStart=add(monday(view),7);
+  }
+  $("wk").textContent=wkLabel;
+  $("week").innerHTML=[0,1,2,3,4].map(i=>{
+    const d=add(wkStart,i), ok=hasMenu(d);
+    return `<button data-go="${d}" class="${ok?"":"off"}${d===TODAY?" today":""}" aria-pressed="${d===view}" ${ok||d===TODAY?"":"disabled"} aria-label="${label(d)}${ok?"":" 식단 없음"}"><i>${DOW[dow(d)]}</i><b>${D(d).getUTCDate()}</b></button>`;
+  }).join("");
+}
+document.addEventListener("click",e=>{
+  const b=e.target.closest("button"); if(!b) return;
+  if(b.dataset.go){ view=b.dataset.go; meal="lunch"; render(); window.scrollTo({top:0}); }
+  if(b.dataset.meal){ meal=b.dataset.meal; render(); }
+});
+render();
+/* 같은 폴더의 menu.json(학교 응답을 그대로 저장한 파일)이 있으면 그걸로 바꿔 그립니다. */
+fetch("menu.json",{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>{
+  const d = j && (j.days ? Object.assign({hours:HOURS,note:NOTE},j) : fromNuri(j));
+  if(d){ DATA=d; render(); }
+}).catch(()=>{});
+</script>
+</body>
+</html>
