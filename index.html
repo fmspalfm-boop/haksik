@@ -109,12 +109,24 @@ function splitGlued(t){
 function fromNuri(j){
   const d=(j&&j.data)||{}; const m=String(d.titl||"").match(/(\d{4})\/(\d{2})\/(\d{2})/);
   if(!m||!d.cont) return null;
-  const toks=String(d.cont).replace(/&nbsp;/g," ").split(/<br\s*\/?>/i).map(t=>t.trim());
-  const flat=[]; toks.forEach((t,i)=>{ if(i>0&&i%5===0&&i<toks.length-1) flat.push(...splitGlued(t)); else flat.push(t); });
+  const raw=String(d.cont).replace(/&nbsp;/g," ").replace(/&quot;/g,'"');
   const days={}; let day=m[1]+"-"+m[2]+"-"+m[3];
-  for(let i=0;i<flat.length;i+=12){
-    days[day]={lunch:flat.slice(i,i+6),dinner:flat.slice(i+6,i+12)};
-    const x=new Date(day+"T00:00:00Z"); x.setUTCDate(x.getUTCDate()+1); day=x.toISOString().slice(0,10);
+  const next=()=>{ const x=new Date(day+"T00:00:00Z"); x.setUTCDate(x.getUTCDate()+1); day=x.toISOString().slice(0,10); };
+  const lines=c=>String(c||"").split(/<br\s*\/?>/i).map(t=>t.trim());
+  if(raw.indexOf("\u007f")>-1){
+    /* 학교가 칸 구분 문자(DEL)를 넣어 보내는 경우: 칸 순서는 월 중식, 월 석식, 화 중식 …
+       공휴일 칸은 메뉴 대신 "한글날"처럼 따옴표로 감싼 이름만 들어옵니다. */
+    const cells=raw.split("\u007f");
+    for(let i=0;i<10&&i<cells.length;i+=2){
+      const L=lines(cells[i]), D=lines(cells[i+1]);
+      const h=(cells[i].trim().match(/^"(.+)"$/)||[])[1]||"";
+      days[day]=h?{lunch:[],dinner:[],holiday:h}:{lunch:L,dinner:D};
+      next();
+    }
+  }else{
+    const toks=lines(raw);
+    const flat=[]; toks.forEach((t,i)=>{ if(i>0&&i%5===0&&i<toks.length-1) flat.push(...splitGlued(t)); else flat.push(t); });
+    for(let i=0;i<flat.length;i+=12){ days[day]={lunch:flat.slice(i,i+6),dinner:flat.slice(i+6,i+12)}; next(); }
   }
   return {hours:HOURS,note:NOTE,days};
 }
@@ -207,10 +219,10 @@ function kimchi(cx,cy,name){
 }
 function dish(name,cx,cy,s){
   const n=name;
-  if(/탕수|강정|튀김|까스|커틀릿|너겟|치킨|고로케|돈가스/.test(n)) return nuggets(cx,cy,s);
+  if(/탕수|강정|튀김|미트볼|까스|커틀릿|너겟|치킨|고로케|돈가스/.test(n)) return nuggets(cx,cy,s);
   if(/잡채|당면/.test(n)) return noodles(cx,cy,s,"#B98A5A","#9C6E42")+specks(cx,cy,s,"#E8833A");
   if(/짜장면|자장면/.test(n)) return noodles(cx,cy,s,"#5A3B26","#3E2817");
-  if(/우동|국수|면|스파게티|파스타|쫄면/.test(n)) return noodles(cx,cy,s,"#F2D9A0","#DDBB73")+specks(cx,cy,s,"#E8452C");
+  if(/우동|국수|떡볶이|면|스파게티|파스타|쫄면/.test(n)) return noodles(cx,cy,s,"#F2D9A0","#DDBB73")+specks(cx,cy,s,"#E8452C");
   if(/새우/.test(n)) return pieces(cx,cy,s,"#F08A4B","#B85A22","#F6A96F")+specks(cx,cy,s,"#2F9E5B");
   if(/소시지|햄|비엔나/.test(n)) return pieces(cx,cy,s,"#D9654A","#9C3A22","#E88A6E")+specks(cx,cy,s,"#2F9E5B");
   if(/다시마|미역줄기|파래/.test(n)) return strips(cx,cy,s,["#3E6B4A","#2B4F36","#57845F"]);
@@ -262,7 +274,7 @@ const CHARACTER =
 /* 메뉴 줄 순서: 밥, 국, 주메뉴, 반찬…, 김치 */
 function arrange(list){
   const a=[...list]; const out={rice:null,soup:null,main:null,sides:[],kimchi:null};
-  const k=a.findIndex((x,i)=>i>1 && /김치|깍두기|석박지|겉절이/.test(x));
+  let k=-1; a.forEach((x,i)=>{ if(i>1 && /김치|깍두기|석박지|겉절이/.test(x)) k=i; });
   if(k>-1) out.kimchi=a.splice(k,1)[0];
   out.rice=a.shift()||null; out.soup=a.shift()||null; out.main=a.shift()||null; out.sides=a;
   if(!out.main){ out.main=out.rice; }
@@ -317,7 +329,7 @@ function render(){
     const when=isToday?"오늘은":"이날은";
     $("content").innerHTML=
       (stale ? `<div class="msg">아직 식단이<br>올라오지 않았어요</div><div class="sub">학교에서 이번 주 식단을 올리면 여기에 나타나요.</div>`
-             : `<div class="msg">${when} 쉬는 날이라<br>메뉴가 없어요 ㅠ</div>`+
+             : `<div class="msg">${when} ${esc((DATA.days[view]||{}).holiday||"쉬는 날")}이라<br>메뉴가 없어요 ㅠ</div>`+
                `<div class="sub">${next?`다음 학식은 ${label(next)}이에요.`:"다음 식단은 아직 올라오지 않았어요."}</div>`)+
       (next?`<button class="btn" data-go="${next}">${label(next)} 식단 보기</button>`
            :(!isToday?`<button class="btn" data-go="${TODAY}">오늘로 돌아가기</button>`:""));
